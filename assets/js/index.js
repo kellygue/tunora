@@ -26,8 +26,7 @@ async function initListeners() {
     audioElm.addEventListener('loadedmetadata', () => {
         window.currentTrackDuration = parseFloat(window.audioElm.duration).toFixed(2)
         window.currentTrackProgress.max = parseFloat(window.audioElm.duration).toFixed(2)
-        document.querySelector('#audioElmDuration').innerHTML = formatTime(parseFloat(window.audioElm.duration))
-        console.log(window.audioElm.duration, window.audioElm.currentTime)
+        document.querySelector('#audioElmDuration').innerHTML = formatTime(window.audioElm.duration)
     })
     audioElm.addEventListener('timeupdate', async () => {
         window.currentTrackProgress.value = parseFloat(window.audioElm.currentTime).toFixed(2)
@@ -37,7 +36,7 @@ async function initListeners() {
             await resetPlayer()
         }
     })
-    window.currentTrackProgress.addEventListener('sl-input', (e) => {
+    window.currentTrackProgress.addEventListener('sl-change', (e) => {
         if (window.currentTrackIsPlaying === false) {
             window.currentTrackProgress.value = 0
             return
