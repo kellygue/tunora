@@ -47,7 +47,7 @@ async function initListeners() {
 }
 
 async function getAllSongs() {
-    const songs = await fetch('../data/songs.json').then(response => response.json())
+    const songs = await fetch('/data/songs.json').then(response => response.json())
     
     songs.forEach(song => {
         let elm = buildSongElm(song)
