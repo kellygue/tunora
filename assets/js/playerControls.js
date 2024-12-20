@@ -35,4 +35,9 @@ function initControlsListeners() {
             window.currentTrackIsPlaying = true;  // Track is now playing
         }
     });
+
+    // Activate or deactivate track loop
+    document.querySelector('#trackLoopBtn').addEventListener('sl-change', () => {
+        window.audioElm.loop = document.querySelector('#trackLoopBtn').checked
+    })
 }
