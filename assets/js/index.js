@@ -26,7 +26,7 @@ async function initListeners() {
     audioElm.addEventListener('loadedmetadata', () => {
         window.currentTrackDuration = window.audioElm.duration
         window.currentTrackProgress.max = window.audioElm.duration
-        document.querySelector('#audioElmDuration').innerHTML = formatTime(window.audioElm.duration)
+        document.querySelector('#audioElmDuration').innerHTML = formatTime(parseFloat(window.audioElm.duration))
     })
     audioElm.addEventListener('timeupdate', async () => {
         window.currentTrackProgress.value = parseFloat(window.audioElm.currentTime)
