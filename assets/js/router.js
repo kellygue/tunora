@@ -10,7 +10,7 @@ page('/pages/add', async () => {
     const content = await fetch(`${ENV.BASE_URL}pages/add.html`).then(response => response.text())
     document.querySelector('#pageContainer').innerHTML = content
     // Loading the necessary scripts for the page
-    loadScript('/assets/js/pages/add.js')
+    loadScript(`${ENV.BASE_URL}assets/js/pages/add.js`)
 })
 
 page()
