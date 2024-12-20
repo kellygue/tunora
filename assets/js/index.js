@@ -36,11 +36,12 @@ async function initListeners() {
             await resetPlayer()
         }
     })
-    window.currentTrackProgress.addEventListener('sl-change', (e) => {
+    window.currentTrackProgress.addEventListener('sl-input', (e) => {
         if (window.currentTrackIsPlaying === false) {
             window.currentTrackProgress.value = 0
             return
         }
+
         window.audioElm.currentTime = window.currentTrackProgress.value
     })
 }
@@ -94,7 +95,7 @@ async function resetPlayer() {
     window.currentTrackId = null
     window.currentTrackIsPlaying = false
     window.currentTrackPlaying = null
-    window.currentTrackProgress = 0
+    window.currentTrackProgress.value = 0
     window.playPauseButton.click()
     window.audioElm.load()
 }
