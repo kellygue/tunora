@@ -23,7 +23,7 @@ async function initListeners() {
     });
 
     // Listen to when the player is ready and retrive metadata
-    audioElm.addEventListener('loadedmetadata', () => {
+    audioElm.addEventListener('canplaythrough', () => {
         window.currentTrackDuration = parseFloat(window.audioElm.duration).toFixed(2)
         window.currentTrackProgress.max = parseFloat(window.audioElm.duration).toFixed(2)
         document.querySelector('#audioElmDuration').innerHTML = formatTime(window.audioElm.duration)
@@ -92,11 +92,11 @@ async function set_current_playing_track(songId) {
 
 // Resetting the player
 async function resetPlayer() {
+    window.playPauseButton.click()
     window.currentTrackId = null
     window.currentTrackIsPlaying = false
     window.currentTrackPlaying = null
     window.currentTrackProgress.value = 0
-    window.playPauseButton.click()
     window.audioElm.load()
 }
 
