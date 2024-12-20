@@ -7,7 +7,7 @@ page('/', async () => {
 page('/pages/add', async () => {
     await preNavigate()
     // Getting the content of the page
-    const content = await fetch('/pages/add.html').then(response => response.text())
+    const content = await fetch(`${ENV.BASE_URL}pages/add.html`).then(response => response.text())
     document.querySelector('#pageContainer').innerHTML = content
     // Loading the necessary scripts for the page
     loadScript('/assets/js/pages/add.js')

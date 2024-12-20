@@ -4,23 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <script>
+        const basePath = window.location.pathname.includes('/tunora') ? '/tunora/' : '/';
+        document.write(`<base href="${basePath}">`);
+    </script>
+
     <!-- Router -->
-    <script src="/assets/js/router.js" type="module" defer></script>
+    <script src="assets/js/router.js" type="module" defer></script>
 
     <!-- Registering the service worker -->
-    <script src="/assets/js/sw-register.js" async></script>
+    <script src="assets/js/sw-register.js" async></script>
 
     <!-- Shoelace -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.19.1/cdn/themes/light.css" />
     <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.19.1/cdn/shoelace-autoloader.js"></script>
 
     <!-- Store JS -->
-    <script src="/assets/js/store.everything.min.js"></script>
+    <script src="assets/js/store.everything.min.js"></script>
 
     <!-- My scripts -->
-    <script src="/assets/js/index.js" type="module" defer></script>
-    <script src="/assets/js/storage.js" type="module" defer></script>
-    <script src="/assets/js/playerControls.js" type="module" defer></script>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/index.js" type="module" defer></script>
+    <script src="assets/js/storage.js" type="module" defer></script>
+    <script src="assets/js/playerControls.js" type="module" defer></script>
 
     <!-- Notyf -->
     <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
@@ -31,8 +37,8 @@
 
     <!-- If the current path name is not '/', redirect to '/'-->
     <script async>
-        if (window.location.pathname !== '/') {
-          window.location.href = '/';
+        if (window.location.pathname !== ENV.BASE_URL) {
+          window.location.href = ENV.BASE_URL;
         }
       </script>
 
