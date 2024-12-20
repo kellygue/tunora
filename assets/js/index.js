@@ -23,14 +23,14 @@ async function initListeners() {
     });
 
     // Listen to when the player is ready and retrive metadata
-    audioElm.addEventListener('canplaythrough', () => {
+    audioElm.addEventListener('canplaythrough', async () => {
         window.currentTrackDuration = parseFloat(window.audioElm.duration).toFixed(2)
         window.currentTrackProgress.max = parseFloat(window.audioElm.duration).toFixed(2)
-        document.querySelector('#audioElmDuration').innerHTML = formatTime(window.audioElm.duration)
+        document.querySelector('#audioElmDuration').innerHTML = await formatTime(window.currentTrackDuration)
     })
     audioElm.addEventListener('timeupdate', async () => {
         window.currentTrackProgress.value = parseFloat(window.audioElm.currentTime).toFixed(2)
-        document.querySelector('#audioElmCurrentTime').innerHTML = formatTime(window.audioElm.currentTime)
+        document.querySelector('#audioElmCurrentTime').innerHTML = await formatTime(window.audioElm.currentTime)
 
         if (window.audioElm.currentTime >= window.audioElm.duration) {
             await resetPlayer()
@@ -101,7 +101,7 @@ async function resetPlayer() {
 }
 
 // Format seconds into the following format: 00:00
-function formatTime(seconds) {
+async function formatTime(seconds) {
     const minutes = Math.floor(seconds / 60); // Get the number of minutes
     const remainingSeconds = Math.floor(seconds % 60); // Get the remaining seconds
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`; // Format as mm:ss
