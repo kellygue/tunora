@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Shoelace -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.19.1/cdn/themes/light.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.19.1/cdn/shoelace-autoloader.js"></script>
+
+    <!-- Tailwindcss -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+
+    <title>Tunora</title>
+</head>
+<body class="px-8 md:px-24 py-12 md:py-16 min-h-screen">
+    <!-- Header -->
+    <header class="flex items-center justify-between">
+        <h1 class="font-bold text-xl">
+            <a href="/" class="px-3 py-1 rounded-md border-2 border-black">
+                Tunora
+            </a>
+        </h1>
+
+        <div>
+            <ul>
+                <li>
+                    <sl-icon-button name="house" label="Home" href="/" style="font-size: 1.5rem;"></sl-icon-button>
+                </li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Player -->
+    <div class="fixed bottom-10 left-5 right-5 p-8 rounded-lg bg-gray-200">
+        <audio id="audioElement"></audio>
+        <!-- Controls -->
+        <div>
+            <!-- Buttons -->
+            <div class="flex items-center gap-x-4">
+                <div class="flex items-center">
+                    <sl-tooltip content="Play the previous song">
+                        <sl-icon-button name="skip-start-fill" label="Previous" class="text-2xl"></sl-icon-button>
+                    </sl-tooltip>
+                    
+                    <button id="playPauseButton" aria-label="Play" class="ml-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1.5rem" height="1.5rem"><polygon points="5,3 19,12 5,21" /></svg>
+                    </button>
+                    
+                    <sl-tooltip content="Play the next song">
+                        <sl-icon-button name="skip-end-fill" label="Next" class="text-2xl"></sl-icon-button>
+                    </sl-tooltip>            
+                </div>
+
+                <div>
+                    <!-- Show Time -->
+                    <div>
+                        <span>
+                            <span id="audioElmCurrentTime">00:00</span>
+                            <span>/</span>
+                            <span id="audioElmDuration">00:00</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <!-- Progress Bar -->
+            <div class="mt-2">
+                <!-- <sl-progress-bar value="0" style="--height: 6px;" id="currentTrackProgress"></sl-progress-bar> -->
+                <sl-range
+                    id="currentTrackProgress"
+                    style="
+                    --track-color-active: var(--sl-color-primary-600);
+                    --track-color-inactive: var(--sl-color-primary-100);
+                    height: 6px;
+                    "
+                    value="0"
+                    max="100"
+                ></sl-range>
+
+            </div>
+        </div>
+    </div>
+    
+    <div id="root" class="mt-12">
+        <!-- Screens -->
+        <!-- Main screen -->
+        <div id="mainScreen">
+
+            <div>
+
+                <sl-tab-group>
+                    <sl-tab slot="nav" panel="songs">
+                        <sl-icon name="music-note"></sl-icon>
+                        <span class="ml-1">
+                            Tracks
+                        </span>
+                    </sl-tab>
+                    <sl-tab slot="nav" panel="custom">
+                        <sl-icon name="bookmark-heart"></sl-icon>
+                        <span class="ml-1">
+                            Favourites
+                        </span>
+                    </sl-tab>
+                  
+                    <sl-tab-panel name="songs">
+                        <div id="tracksContainer"></div>
+                    </sl-tab-panel>
+                    <sl-tab-panel name="favourites">This is the custom tab panel.</sl-tab-panel>
+                  </sl-tab-group>
+            </div>
+
+        </div>
+
+
+
+    </div>
+    <script src="./assets/js/index.js"></script>
+    <script src="./assets/js/storage.js" defer></script>
+    <script src="./assets/js/playerControls.js" defer></script>
+</body>
+</html>
