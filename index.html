@@ -4,9 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- Router -->
+    <script src="./assets/js/router.js" type="module" defer></script>
+
+    <!-- Registering the service worker -->
+    <script src="./assets/js/sw-register.js" async></script>
+
     <!-- Shoelace -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.19.1/cdn/themes/light.css" />
     <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.19.1/cdn/shoelace-autoloader.js"></script>
+
+    <!-- Store JS -->
+    <script src="/assets/js/store.everything.min.js"></script>
+
+    <!-- My scripts -->
+    <script src="./assets/js/index.js" type="module" defer></script>
+    <script src="./assets/js/storage.js" type="module" defer></script>
+    <script src="./assets/js/playerControls.js" defer></script>
+
 
     <!-- Tailwindcss -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -18,15 +33,18 @@
     <!-- Header -->
     <header class="flex items-center justify-between">
         <h1 class="font-bold text-xl">
-            <a href="/tunora" class="px-3 py-1 rounded-md border-2 border-black">
+            <a href="/" class="px-3 py-1 rounded-md border-2 border-black">
                 Tunora
             </a>
         </h1>
 
         <div>
-            <ul>
+            <ul class="flex items-center">
                 <li>
-                    <sl-icon-button name="house" label="Home" href="/tunora" style="font-size: 1.5rem;"></sl-icon-button>
+                    <sl-icon-button name="house" label="Home" href="/" style="font-size: 1.3rem;"></sl-icon-button>
+                </li>
+                <li>
+                    <sl-icon-button name="plus-square" label="Add a new song" href="/pages/add" style="font-size: 1.3rem;"></sl-icon-button>
                 </li>
             </ul>
         </div>
@@ -81,7 +99,6 @@
     </div>
     
     <div id="root" class="mt-12">
-        <!-- Screens -->
         <!-- Main screen -->
         <div id="mainScreen">
 
@@ -110,11 +127,8 @@
 
         </div>
 
-
-
+        <!-- Other Screen -->
+        <div id="pageContainer"></div>
     </div>
-    <script src="./assets/js/index.js" defer></script>
-    <script src="./assets/js/storage.js" defer></script>
-    <script src="./assets/js/playerControls.js" defer></script>
 </body>
 </html>
