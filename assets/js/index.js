@@ -1,4 +1,4 @@
-import { getAllTracks } from "./storage.js";
+import { getAllTracks } from "./storage.js"
 
 /**
  * Initializes the application when the DOM content is fully loaded.
@@ -59,6 +59,17 @@ document.addEventListener('DOMContentLoaded', async () => {
      * @type {object|null}
      */
     window.currentTrackPlaying = null;
+
+    /**
+     * Initializing the notification library Notyf
+     */
+    window.notyf = new Notyf({
+        ripple: false,
+        position: {
+            x: 'right',
+            y: 'top'
+        }
+    })
 
     // Fetch all songs from the server and initialize event listeners.
     await showTracks().then(async () => await initListeners());
@@ -141,7 +152,6 @@ async function showTracks() {
         let elm = buildSongElm(song)
         document.querySelector('#tracksContainer').appendChild(elm)
     });
-
 }
 
 

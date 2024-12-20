@@ -1,4 +1,3 @@
-
 /**
  * Retrieves all tracks from local storage.
  * 
@@ -44,7 +43,7 @@ export async function saveTrack() {
 
     // Validate input data to ensure valid length for title, artist, and id
     if (title.length <= 2 || artist.length <= 2 || id.length <= 2) {
-        alert('Invalid data')
+        notyf.error('Invalid data')
         return
     }
 
@@ -52,7 +51,7 @@ export async function saveTrack() {
     const trackExists = tracks.some(_track => _track.id === newTrack.id)
 
     if (trackExists) {
-        alert('This track already exists')
+        notyf.error('This track already exists')
         return
     }
 
@@ -64,6 +63,8 @@ export async function saveTrack() {
 
     // Reset the track form
     await resetTrackForm()
+
+    notyf.success("Track added successfully")
 }
 
 
