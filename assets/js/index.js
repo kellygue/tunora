@@ -144,7 +144,7 @@ async function initListeners() {
     });
 }
 
-
+// Display all the tracks
 async function showTracks() {
     const songs = await getAllTracks()
     

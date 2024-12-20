@@ -13,7 +13,6 @@ page('/pages/add', async () => {
     loadScript('/assets/js/pages/add.js')
 })
 
-page({ hashbang: true })
 page()
 
 async function preNavigate(isHome = false) {
