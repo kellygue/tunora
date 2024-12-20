@@ -24,8 +24,8 @@ async function initListeners() {
 
     // Listen to when the player is ready and retrive metadata
     audioElm.addEventListener('loadedmetadata', () => {
-        window.currentTrackDuration = window.audioElm.duration
-        window.currentTrackProgress.max = window.audioElm.duration
+        window.currentTrackDuration = parseFloat(window.audioElm.duration).toFixed(2)
+        window.currentTrackProgress.max = parseFloat(window.audioElm.duration).toFixed(2)
         document.querySelector('#audioElmDuration').innerHTML = formatTime(parseFloat(window.audioElm.duration))
         console.log(window.audioElm.duration, window.audioElm.currentTime)
     })
