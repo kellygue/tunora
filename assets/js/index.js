@@ -24,15 +24,19 @@ async function initListeners() {
 
     // Listen to when the player is ready and retrive metadata
     audioElm.addEventListener('canplaythrough', async () => {
-        window.currentTrackDuration = parseFloat(window.audioElm.duration).toFixed(2)
-        window.currentTrackProgress.max = parseFloat(window.audioElm.duration).toFixed(2)
+        if (navigator.userAgent.includes("iPhone")) {
+            window.currentTrackDuration = parseFloat(window.audioElm.duration / 2).toFixed(2)
+        } else {
+            window.currentTrackDuration = parseFloat(window.audioElm.duration).toFixed(2)
+        }
+
+        window.currentTrackProgress.max = window.currentTrackDuration
         document.querySelector('#audioElmDuration').innerHTML = await formatTime(window.currentTrackDuration)
     })
+
     audioElm.addEventListener('timeupdate', async () => {
         window.currentTrackProgress.value = parseFloat(window.audioElm.currentTime).toFixed(2)
         document.querySelector('#audioElmCurrentTime').innerHTML = await formatTime(window.audioElm.currentTime)
-        
-        document.querySelector('em').innerHTML = window.audioElm.duration
 
         if (window.audioElm.currentTime >= window.audioElm.duration) {
             await resetPlayer()
