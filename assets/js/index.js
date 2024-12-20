@@ -1,4 +1,5 @@
 import { getAllTracks } from "./storage.js"
+import { resetPlayer } from "./playerControls.js"
 
 /**
  * Initializes the application when the DOM content is fully loaded.
@@ -111,7 +112,7 @@ async function initListeners() {
         window.currentTrackProgress.max = window.currentTrackDuration;
 
         // Display the total track duration in a formatted time string.
-        document.querySelector('#audioElmDuration').innerHTML = await formatTime(window.currentTrackDuration);
+        document.querySelector('#audioElmDuration').innerHTML = formatTime(window.currentTrackDuration);
     });
 
     /**
@@ -120,7 +121,7 @@ async function initListeners() {
     audioElm.addEventListener('timeupdate', async () => {
         // Update the progress bar value and current time display.
         window.currentTrackProgress.value = parseFloat(window.audioElm.currentTime).toFixed(2);
-        document.querySelector('#audioElmCurrentTime').innerHTML = await formatTime(window.audioElm.currentTime);
+        document.querySelector('#audioElmCurrentTime').innerHTML = formatTime(window.audioElm.currentTime);
 
         // If the track has finished playing, reset the player.
         if (window.audioElm.currentTime >= window.audioElm.duration) {
@@ -184,11 +185,11 @@ async function set_current_playing_track(songId) {
             // Update the current track ID.
             window.currentTrackId = songId;
 
-            // Trigger the play/pause button to start playback.
-            window.playPauseButton.click();
-
             // Reset the loading flag as the track has been successfully fetched and played.
             window.requestIsLoading = false;
+            
+            // Trigger the play/pause button to start playback.
+            window.playPauseButton.click();
         })
         .catch(error => {
             // Handle any errors that occur during the fetch request.
@@ -201,32 +202,11 @@ async function set_current_playing_track(songId) {
 
 
 /**
- * Resets the audio player to its initial state.
- * Stops the current track, clears the progress, and prepares the player for the next track.
- */
-async function resetPlayer() {
-    // Simulate a click on the play/pause button to stop the current track if playing.
-    window.playPauseButton.click();
-
-    // Reset the global variables related to the current track.
-    window.currentTrackId = null;  // Clear the current track ID.
-    window.currentTrackIsPlaying = false;  // Indicate that no track is currently playing.
-    window.currentTrackPlaying = null;  // Clear the URL of the currently playing track.
-
-    // Reset the track progress bar to 0.
-    window.currentTrackProgress.value = 0;
-
-    // Reload the audio element to prepare it for a new track.
-    window.audioElm.load();
-}
-
-
-/**
  * Formats a given time in seconds into a string format of "mm:ss".
  * @param {number} seconds - The time in seconds to be formatted.
  * @returns {string} - The formatted time as "mm:ss".
  */
-async function formatTime(seconds) {
+function formatTime(seconds) {
     // Calculate the number of minutes
     const minutes = Math.floor(seconds / 60);
 
