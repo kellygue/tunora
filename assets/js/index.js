@@ -32,9 +32,8 @@ async function initListeners() {
         window.currentTrackProgress.value = parseFloat(window.audioElm.currentTime)
         document.querySelector('#audioElmCurrentTime').innerHTML = formatTime(window.audioElm.currentTime)
 
-        if (window.audioElm.currentTime == window.audioElm.duration) {
+        if (window.audioElm.currentTime >= window.audioElm.duration) {
             await resetPlayer()
-            console.log('done')
         }
     })
     window.currentTrackProgress.addEventListener('sl-input', (e) => {
@@ -67,7 +66,6 @@ async function play(songId) {
 // Getting the stream url
 async function set_current_playing_track(songId) {
     if (songId === window.currentTrackId) {
-        console.log('same')
         window.audioElm.currentTime = 0
         return
     }
@@ -96,6 +94,7 @@ async function resetPlayer() {
     window.currentTrackId = null
     window.currentTrackIsPlaying = false
     window.currentTrackPlaying = null
+    window.currentTrackProgress = 0
     window.playPauseButton.click()
     window.audioElm.load()
 }
