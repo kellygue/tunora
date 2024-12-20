@@ -42,7 +42,7 @@ async function initListeners() {
             window.currentTrackProgress.value = 0
             return
         }
-        window.audioElm.currentTime = parseInt(window.currentTrackProgress.value)
+        window.audioElm.currentTime = window.currentTrackProgress.value
     })
 }
 
