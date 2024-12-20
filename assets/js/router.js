@@ -1,10 +1,10 @@
 import page from "//unpkg.com/page/page.mjs";
 
-page('/', async () => {
+page(`${ENV.BASE_URL}`, async () => {
     await preNavigate(true)
 })
 
-page('/pages/add', async () => {
+page(`${ENV.BASE_URL}pages/add`, async () => {
     await preNavigate()
     // Getting the content of the page
     const content = await fetch(`${ENV.BASE_URL}pages/add.html`).then(response => response.text())
