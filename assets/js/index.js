@@ -31,6 +31,8 @@ async function initListeners() {
     audioElm.addEventListener('timeupdate', async () => {
         window.currentTrackProgress.value = parseFloat(window.audioElm.currentTime).toFixed(2)
         document.querySelector('#audioElmCurrentTime').innerHTML = await formatTime(window.audioElm.currentTime)
+        
+        document.querySelector('em').innerHTML = window.audioElm.duration
 
         if (window.audioElm.currentTime >= window.audioElm.duration) {
             await resetPlayer()
