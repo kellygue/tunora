@@ -30,7 +30,7 @@ async function initListeners() {
         console.log(window.audioElm.duration, window.audioElm.currentTime)
     })
     audioElm.addEventListener('timeupdate', async () => {
-        window.currentTrackProgress.value = parseFloat(window.audioElm.currentTime)
+        window.currentTrackProgress.value = parseFloat(window.audioElm.currentTime).toFixed(2)
         document.querySelector('#audioElmCurrentTime').innerHTML = formatTime(window.audioElm.currentTime)
 
         if (window.audioElm.currentTime >= window.audioElm.duration) {
