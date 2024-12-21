@@ -1,10 +1,10 @@
 // service-worker.js
 const CACHE_NAME = 'tunora-v1';
 const ASSETS_TO_CACHE = [
-  ENV.BASE_URL,
-  `${ENV.BASE_URL}assets/js/index.js`,
-  `${ENV.BASE_URL}assets/js/playerControls.js`,
-  `${ENV.BASE_URL}assets/js/router.js`
+  `index.html`,
+  `assets/js/index.js`,
+  `assets/js/playerControls.js`,
+  `assets/js/router.js`
 ];
 
 // Install event - Cache the essential files

@@ -1,4 +1,5 @@
-import page from "//unpkg.com/page/page.mjs";
+import page from "//unpkg.com/page/page.mjs"
+// import { ENV } from "./config.js"
 
 page(`${ENV.BASE_URL}`, async () => {
     await preNavigate(true)
