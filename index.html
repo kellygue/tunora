@@ -27,8 +27,11 @@
 
     <!-- My scripts -->
     <script src="assets/js/index.js" type="module" defer></script>
-    <script src="assets/js/storage.js" type="module" defer></script>
+    <script src="assets/js/store.js" type="module" defer></script>
     <script src="assets/js/playerControls.js" type="module" defer></script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <!-- Notyf -->
     <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
@@ -46,7 +49,7 @@
 
     <title>Tunora</title>
 </head>
-<body class="px-8 md:px-24 py-12 md:py-16 min-h-screen">
+<body class="px-8 md:px-24 py-12 md:py-16 min-h-screen" x-data="indexPage">
     <!-- Header -->
     <header class="flex items-center justify-between">
         <h1 class="font-bold text-xl">
@@ -67,68 +70,146 @@
         </div>
     </header>
 
-    <!-- Player -->
-    <div class="fixed bottom-10 left-5 right-5 p-8 rounded-lg bg-gray-200">
-        <audio id="audioElement" type="audio/mp3"></audio>
+    <!-- Big Player -->
+    <div class="fixed bottom-0 left-0 right-0 top-0 z-50 bg-gray-100 min-h-screen min-w-screen transition-all scacle-y-100 origin-bottom"
+        x-show="bigPlayerOpen"
+        x-transition:enter="transition-all duration-300 transform ease-out"
+        x-transition:enter-start="transform scale-y-0 opacity-0"
+        x-transition:enter-end="transform scale-y-100 opacity-100"
+        x-transition:leave="transition-all duration-300 transform ease-in"
+        x-transition:leave-start="transform scale-y-100 opacity-100"
+        x-transition:leave-end="transform scale-y-0 opacity-30"
+        x-data="player"
+        x-cloak
+    >
+        <audio x-ref="audioElm" type="audio/mp3" :src="$store.currentTrack.url" :loop="$store.currentTrack.isLooping"  class="hidden"></audio>
         <!-- Controls -->
-        <div>
-            <!-- Buttons -->
-            <div class="flex items-center gap-x-4">
-                <div class="flex items-center">
-                    <sl-tooltip content="Play the previous song">
-                        <sl-icon-button name="skip-start-fill" label="Previous" class="text-2xl"></sl-icon-button>
-                    </sl-tooltip>
-                    
-                    <button id="playPauseButton" aria-label="Play" class="ml-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1.5rem" height="1.5rem"><polygon points="5,3 19,12 5,21" /></svg>
-                    </button>
-                    
-                    <sl-tooltip content="Play the next song">
-                        <sl-icon-button name="skip-end-fill" label="Next" class="text-2xl"></sl-icon-button>
-                    </sl-tooltip>
-                </div>
-
-                <div>
-                    <!-- Show Time -->
-                    <div>
-                        <span>
-                            <span id="audioElmCurrentTime">--</span>
-                            <span>/</span>
-                            <span id="audioElmDuration">--</span>
-                        </span>
-                    </div>
-                </div>
-
-                <div class="ml-auto">
-                    <sl-dropdown placement="top-end" distance="10">
-                        <sl-icon-button name="sliders" slot="trigger"></sl-icon-button>
-
-                        <sl-menu>
-                          <sl-menu-item>
-                            <div>
-                                <sl-switch size="small" id="trackLoopBtn">Loop</sl-switch>
-                            </div>
-                          </sl-menu-item>
-                        </sl-menu>
-                      </sl-dropdown>                      
-                </div>
+        <div class="flex flex-col gap-y-6 w-full h-full p-12 justify-between">
+            <!-- Close Button -->
+            <button  class="absolute top-4 right-6" @click="bigPlayerOpen = false">
+                <sl-icon name="chevron-compact-down" label="Close"></sl-icon>
+            </button>
+            <!-- Album Cover -->
+            <div class="my-4 w-52 h-52 rounded-lg bg-gray-200 flex items-center justify-center mx-auto">
+                <!-- <img id="trackCover" src="" alt="Album Cover" class="w-48 h-48 rounded-lg"> -->
             </div>
 
-            <!-- Progress Bar -->
-            <div class="mt-2">
-                <sl-range
-                    id="currentTrackProgress"
+            <!-- Track Name, Progress Bar, Current Time and Duration -->
+            <div>
+                <!-- Track Name and Artist Name -->
+                <div>
+                    <span class="flex flex-col gap-y-1 text-gray-800">
+                        <span id="trackName" x-text="$store.currentTrack.title || 'Not playing'"  class="text-lg font-bold"></span>
+                        <span id="trackArtist" x-text="$store.currentTrack.artist || '--'"  class="text-sm text-gray-400"></span>
+                    </span>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="mt-6">
+                    <sl-range
+                    x-ref="seekBar"
                     style="
                     --track-color-active: var(--sl-color-primary-600);
                     --track-color-inactive: var(--sl-color-primary-100);
-                    height: 6px;
+                    --thumb-size: 8px;
+                    --track-height: 4px;
                     "
                     value="0"
-                ></sl-range>
+                    ></sl-range>
+                </div>
 
+                <!-- Current Time and Duration -->
+                <div class="flex justify-between items-center">
+                    <small x-ref="audioElmCurrentTime">--:--</small>
+                    <small x-ref="audioElmDuration">--:--</small>
+                </div>
             </div>
+
+            <!-- Buttons -->
+            <div class="flex flex-col items-center">
+                <!-- Previous, Play/Pause, Next -->
+                <div class="flex items-center w-full mx-auto justify-around">
+                    <!-- Previous -->
+                    <sl-tooltip content="Play the previous song">
+                        <sl-icon-button name="skip-start-fill" label="Previous" class="text-4xl"></sl-icon-button>
+                    </sl-tooltip>
+                    
+                    <!-- Play/Pause Button -->
+                    <sl-icon-button x-ref="playButton"
+                        aria-label="Play"
+                        class="ml-1 text-6xl" 
+                        x-show="!$store.currentTrack.isPlaying"
+                        name="play-fill"
+                        @click="playCurrentTrack()"
+                    ></sl-icon-button>
+
+                    <sl-icon-button x-ref="pauseButton"
+                        aria-label="Pause"
+                        class="ml-1 text-6xl"
+                        x-show="$store.currentTrack.isPlaying"
+                        @click="pauseCurrentTrack()"
+                        name="pause-fill"
+                    ></sl-icon-button>
+
+                    <!-- Next -->
+                    <sl-tooltip content="Play the next song">
+                        <sl-icon-button name="skip-end-fill" label="Next" class="text-4xl"></sl-icon-button>
+                    </sl-tooltip>
+                </div>
+            </div>
+
+            <!-- Volume Control -->
+            <div>
+                <div class="flex items-bottom justify-center">
+                    <sl-icon-button name="volume-off" label="Mute"></sl-icon-button>
+                    <sl-range
+                        x-ref="volumeBar"
+                        style="
+                        --track-color-active: var(--sl-color-primary-600);
+                        --track-color-inactive: var(--sl-color-primary-100);
+                        --thumb-size: 8px;
+                        --track-height: 6px;
+                        "
+                        value="100"
+                        class="w-full mx-2"
+                    ></sl-range>
+                    <sl-icon-button name="volume-up" label="Full volume"></sl-icon-button>
+                </div>
+            </div>
+
+            <!-- Footer container loop, shuffle and queue buttons -->
+            <div class="flex items-center justify-between">
+                <sl-icon-button
+                    name="infinity"
+                    label="Loop"
+                    id="trackLoopBtn"
+                    @click="toggleLoop()"
+                    class="rounded"
+                    :class="$store.currentTrack.isLooping ? 'bg-blue-200' : 'bg-transparent'"
+                ></sl-icon-button>
+                
+                <sl-icon-button name="shuffle" label="Shuffle" id="trackShuffleBtn" @click="shuffleQueue()"></sl-icon-button>
+                <sl-icon-button name="music-note-list" label="Queue" id="openQueueBtn" @click="showQueue()"></sl-icon-button>
+            </div>
+
         </div>
     </div>
+
+    <!-- Mini Player -->
+    <div class="fixed bottom-0 left-0 right-0 p-4 bg-gray-200" @click="bigPlayerOpen = true" x-cloak>
+        <div class="flex items-center flex-1 justify-between">
+            <div class="flex items-center">
+                <sl-icon name="music-note"></sl-icon>
+                <span class="ml-2">
+                    <span id="miniPlayerTrackName">--</span>
+                </span>
+            </div>
+            <button id="miniPlayPauseButton" aria-label="Play" class="ml-1">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1.5rem" height="1.5rem"><polygon points="5,3 19,12 5,21" /></svg>
+            </button>
+        </div>
+    </div>
+
     
     <div id="root" class="mt-12">
         <!-- Main screen -->

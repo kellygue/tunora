@@ -1,103 +1,144 @@
-// SVG icons for play and pause states
-const playSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1.5rem" height="1.5rem"><polygon points="5,3 19,12 5,21"/></svg>`
-let pauseSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1.5rem" height="1.5rem"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>`
+document.addEventListener('alpine:init', () => {
 
-/**
- * Initializes the event listeners for the controls (e.g., play/pause button).
- * This function is called when the DOM is fully loaded.
- */
-document.addEventListener('DOMContentLoaded', async () => {
-    await initControlsListeners();  // Initialize the play/pause button listener
-});
+    Alpine.data('player', () => ({
+        elmStore: null,
 
-/**
- * Sets up the event listener for the play/pause button.
- * This toggles playback of the current track and updates the button's appearance.
- */
-async function initControlsListeners() {
-    // Add a click event listener to the play/pause button
-    playPauseButton.addEventListener('click', async () => {
-        // If no track is playing, exit early
-        if (window.currentTrackPlaying === null) return;
+        async init() {
 
-        // Toggle playback state based on whether the track is playing or paused
-        if (window.currentTrackIsPlaying === true) {
-            // Pause the audio and update the button icon and label
-            window.audioElm.pause();
-            playPauseButton.innerHTML = playSvg;  // Change to play icon
-            playPauseButton.setAttribute('aria-label', 'Play');  // Update button accessibility label
-            window.currentTrackIsPlaying = false;  // Track is no longer playing
-        } else {
-            // Play the audio and update the button icon and label
-            window.audioElm.play();
-            playPauseButton.innerHTML = pauseSvg;  // Change to pause icon
-            playPauseButton.setAttribute('aria-label', 'Pause');  // Update button accessibility label
-            window.currentTrackIsPlaying = true;  // Track is now playing
-        }
+            this.elmStore = {
+                audio: this.$refs.audioElm,
+                playButton: this.$refs.playButton,
+                pauseButton: this.$refs.pauseButton,
+                nextButton: this.$refs.nextButton,
+                previousButton: this.$refs.previousButton,
+                seekBar: this.$refs.seekBar,
+                volumeBar: this.$refs.volumeBar,
+                currentTime: this.$refs.audioElmCurrentTime,
+                duration: this.$refs.audioElmDuration,
+                trackTitle: this.$refs.trackTitle,
+                trackArtist: this.$refs.trackArtist,
+                trackImage: this.$refs.trackImage,
+            }
 
-        // Update the playing indicator in the track list
-        await showIndicator()
-    });
+            await this.initListeners()
+            await this.initWatchers()
+        },
 
+        async initWatchers() {
+            // No watchers needed for this component yet.
+        },
 
-    // Activate or deactivate track loop
-    document.querySelector('#trackLoopBtn').addEventListener('sl-change', () => {
-        window.audioElm.loop = document.querySelector('#trackLoopBtn').checked
-    })
-}
+        /**
+         * Plays the current track if it is not already playing and a URL is available.
+         */
+        async playCurrentTrack() {
+            if (this.currentTrackStore.isPlaying === true || this.currentTrackStore.url === null) return
 
+            this.elmStore.audio.play()
+            this.$store.currentTrack.isPlaying = true
+        },
 
-/**
- * Updates the play/pause indicator for the currently playing track.
- * - Changes the icon of the previously playing track (if any) to 'play-fill'.
- * - Updates the icon of the newly playing track to 'pause-fill'.
- * 
- * @async
- */
-async function showIndicator() {
-    // Get the current playing track icon, or set it to null if it doesn't exist
-    const currentPlayingTrackIcon = document.querySelector("#currentPlayingTrackIcon") || null;
-    
-    // If an icon for the currently playing track exists, set its icon to 'play-fill'
-    if (currentPlayingTrackIcon !== null) {
-        currentPlayingTrackIcon.id = ""
-        currentPlayingTrackIcon.setAttribute('name', 'play-fill')
-    }
+        /**
+         * Pauses the current track if it is playing and a URL is available.
+         */
+        async pauseCurrentTrack() {
+            if (this.currentTrackStore.isPlaying === false || this.currentTrackStore.url === null) return
 
-    // Locate the element corresponding to the new current track using the global `currentTrackId`
-    const currentTrackElement = document.querySelector(`[data-song=${window.currentTrackId}]`) || null
-    if (currentTrackElement === null) return
+            this.elmStore.audio.pause()
+            this.$store.currentTrack.isPlaying = false
+        },
 
-    // Find the first <sl-icon> element within the current track element
-    const icon = currentTrackElement.getElementsByTagName('sl-icon')[0]
-    
-    // Update the icon to indicate it is the currently playing track
-    icon.id = "currentPlayingTrackIcon";
+        async initListeners() {
+            /**
+             * Event listener for when the audio element is ready to play and metadata is available.
+             */
+            this.elmStore.audio.addEventListener('canplaythrough', async () => {
+                let duration = 0
+                // Handle duration calculation differently for iPhones due to compatibility issues.
+                if (navigator.userAgent.includes("iPhone")) {
+                    duration = parseFloat(this.elmStore.audio.duration / 2).toFixed(2)
+                } else {
+                    duration = parseFloat(this.elmStore.audio.duration).toFixed(2)
+                }
 
-    if (currentTrackIsPlaying === false) {
-        icon.setAttribute('name', 'play-fill')
-        return
-    }
+                // Set the max value of the seek bar to the duration of the track.
+                this.elmStore.seekBar.max = duration
 
-    icon.setAttribute('name', 'pause-fill');
-}
+                // Set the volume bar value to the current volume.
+                this.elmStore.volumeBar.value = this.elmStore.audio.volume * 100
 
-/**
- * Resets the audio player to its initial state.
- * Stops the current track, clears the progress, and prepares the player for the next track.
- */
-export async function resetPlayer() {
-    playPauseButton.innerHTML = playSvg;  // Change to play icon
-    playPauseButton.setAttribute('aria-label', 'Play');  // Update button accessibility label
+                // Update the duration display.
+                this.elmStore.duration.textContent = this.formatTime(duration)
 
-    // Reset the global variables related to the current track.
-    window.currentTrackId = null;  // Clear the current track ID.
-    window.currentTrackIsPlaying = false;  // Indicate that no track is currently playing.
-    window.currentTrackPlaying = null;  // Clear the URL of the currently playing track.
+                // If the track is not playing, start playing it.
+                if (this.currentTrackStore.isPlaying || this.elmStore.audio.currentTime <= 0) {
+                    await this.playCurrentTrack()
+                }
+            })
 
-    // Reset the track progress bar to 0.
-    window.currentTrackProgress.value = 0;
+            /**
+             * Event listener for updating the progress bar and current time display as the track plays.
+             */
+            this.elmStore.audio.addEventListener('timeupdate', async () => {
+                // Update the seek bar value to match the current time.
+                this.elmStore.seekBar.value = parseFloat(this.elmStore.audio.currentTime).toFixed(2)
 
-    // Reload the audio element to prepare it for a new track.
-    window.audioElm.load();
-}
+                // Update the current time display.
+                this.elmStore.currentTime.textContent = this.formatTime(this.elmStore.audio.currentTime)
+
+                // If the track has finished playing, reset the player.
+                if (this.elmStore.audio.currentTime >= this.elmStore.audio.duration) {
+                    await this.resetPlayer()
+                }
+            })
+
+            /**
+             * Event listener for the progress bar's input events to allow seeking within the track.
+             * Uses the `sl-input` event to detect slider changes.
+             */
+            this.elmStore.seekBar.addEventListener('sl-input', (e) => {
+                // If the track is not playing, prevent seeking and reset progress.
+                if (this.currentTrackStore.url === null) {
+                    this.elmStore.seekBar.value = 0
+                    return
+                }
+
+                // Update the current time of the track to match the seek bar value.
+                this.elmStore.audio.currentTime = this.elmStore.seekBar.value
+            })
+
+            /**
+             * Event listener for the volume bar's input events to allow adjusting the volume.
+             * Uses the `sl-change` event to detect slider changes.
+             */
+            this.elmStore.volumeBar.addEventListener('sl-input', () => {
+                // Update the volume of the track to match the volume bar value.
+                this.elmStore.audio.volume = parseFloat(this.elmStore.volumeBar.value / 100).toFixed(2)
+            })
+
+            /**
+             * Event listener for the custom event dispatched when the streaming url of a track has been returned form the API.
+             */
+            window.addEventListener('trackUrlReturned', (e) => {
+                this.$store.currentTrack.loadDetails(e.detail.id, e.detail.url)
+            })
+        },
+        
+        /**
+         * Toggle loop mode on the audio player.
+         */
+        async toggleLoop() {
+            this.$store.currentTrack.isLooping = !this.$store.currentTrack.isLooping
+        },
+
+        // Shuffle the queue of tracks.
+        async shuffleQueue() {
+            this.$store.queue.tracks = this.shuffle(this.$store.queue.tracks)
+        },
+
+        // Show the queue of tracks.
+        async showQueue() {
+            console.log(this.$store.queue.tracks)
+        },
+    }))
+})
