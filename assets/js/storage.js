@@ -10,8 +10,13 @@
  */
 export async function getAllTracks() {
     // Retrieve and return the list of tracks from storage, or an empty array if none exist
-    return store.get('tracks') || []
+    const tracks = store.get('tracks') || []
+    await createQueue(tracks)
+    return tracks
 }
+
+
+
 
 
 /**
@@ -66,6 +71,73 @@ export async function saveTrack() {
 
     notyf.success("Track added successfully")
 }
+
+
+
+
+/**
+ * Creates a queue object with the given tracks and stores it.
+ *
+ * @async
+ * @function createQueue
+ * @param {Array} tracks - An array of track objects to be added to the queue.
+ * @returns {Promise<void>} - A promise that resolves when the queue is created and stored.
+ */
+async function createQueue(tracks) {
+    let queue = {
+        id: 'queue',
+        tracks: [...tracks]
+    }
+
+    store.set('queue', queue)
+}
+
+
+
+
+
+/**
+ * Adds a track to the queue at the specified position.
+ *
+ * @async
+ * @function addToQueue
+ * @param {Object} track - The track object to be added to the queue.
+ * @param {number} position - The position in the queue where the track should be added.
+ * @returns {Promise<void>} - A promise that resolves when the track has been added to the queue.
+ */
+async function addToQueue(track, position) {
+    let queue = store.get('queue')
+
+    if (position === -1) {
+        queue.tracks.push(track)
+    } else {
+        queue.tracks.splice(position, 0, track)
+    }
+
+    store.set('queue', queue)
+}
+
+
+
+
+/**
+ * Removes a track from the queue based on the provided track ID.
+ *
+ * @async
+ * @function removeFromQueue
+ * @param {string} trackId - The ID of the track to be removed from the queue.
+ * @returns {Promise<void>} - A promise that resolves when the track has been removed from the queue.
+ */
+async function removeFromQueue(trackId) {
+    let queue = store.get('queue')
+
+    queue.tracks = queue.tracks.filter(track => track.id !== trackId)
+
+    store.set('queue', queue)
+}
+
+
+
 
 
 async function resetTrackForm() {

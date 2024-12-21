@@ -1,7 +1,6 @@
 // service-worker.js
 const CACHE_NAME = 'tunora-v1';
 const ASSETS_TO_CACHE = [
-  `index.html`,
   `assets/js/index.js`,
   `assets/js/playerControls.js`,
   `assets/js/router.js`
@@ -26,7 +25,7 @@ self.addEventListener('fetch', (event) => {
 
       // If it's a navigation request (route change), serve the cached index.html
       if (event.request.mode === 'navigate') {
-        return fetch('/index.html'); // Always return index.html for navigation requests
+        return fetch('index.html'); // Always return index.html for navigation requests
       }
 
       // For other network requests (like images, styles, or scripts), fetch as usual
