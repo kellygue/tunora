@@ -1,4 +1,5 @@
 import addPage from './pages/add.js'
+import router from './router.js'
 
 document.addEventListener('alpine:init', () => {
     
@@ -164,6 +165,9 @@ document.addEventListener('alpine:init', () => {
         },
     }))
 
+    // Initialize the router component
+    Alpine.data('router', router)
+
     // Initialize components for other pages
-    Alpine.data('addPage', addPage)    
+    Alpine.data('addPage', addPage)
 })
