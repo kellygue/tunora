@@ -95,7 +95,7 @@
             </button>
             <!-- Album Cover -->
             <div class="my-4 w-52 h-52 rounded-lg bg-gray-200 flex items-center justify-center mx-auto overflow-hidden">
-                <img :src="$store.currentTrack.cover" alt="Album Cover" class="object-cover position-center">
+                <img :src="$store.currentTrack.cover || 'assets/img/default-cover.png'" alt="Album Cover" class="object-cover position-center">
             </div>
 
             <!-- Track Name, Progress Bar, Current Time and Duration -->
