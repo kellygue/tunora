@@ -1,6 +1,7 @@
 // service-worker.js
 const CACHE_NAME = 'tunora-v1';
 const ASSETS_TO_CACHE = [
+  `assets/css/index.css`,
   `assets/js/index.js`,
   `assets/js/playerControls.js`,
   `assets/js/router.js`
