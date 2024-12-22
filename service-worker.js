@@ -1,7 +1,6 @@
 // service-worker.js
 const CACHE_NAME = 'tunora-v1';
 const ASSETS_TO_CACHE = [
-  `index.html`,
   `assets/js/index.js`,
   `assets/js/playerControls.js`,
   `assets/js/router.js`
@@ -18,6 +17,11 @@ self.addEventListener('install', (event) => {
 
 // Fetch event - Serve cached assets or return index.html for non-static requests
 self.addEventListener('fetch', (event) => {
+
+  if (event.request.url.includes('discogs.com')) {
+    return; // Let this request go through to the network without service worker interference
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -26,7 +30,7 @@ self.addEventListener('fetch', (event) => {
 
       // If it's a navigation request (route change), serve the cached index.html
       if (event.request.mode === 'navigate') {
-        return fetch('/index.html'); // Always return index.html for navigation requests
+        return fetch('index.html'); // Always return index.html for navigation requests
       }
 
       // For other network requests (like images, styles, or scripts), fetch as usual
