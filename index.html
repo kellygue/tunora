@@ -49,7 +49,11 @@
 
     <title>Tunora</title>
 </head>
-<body class="px-8 md:px-24 py-12 md:py-16 min-h-screen" x-data="indexPage">
+<body class="px-8 md:px-24 py-12 md:py-16 min-h-screen"
+    x-data="indexPage"
+    @track-returned.window="$store.tracks.updateTrack({ url: event.detail.url, id: event.detail.id })"
+    @track-invalid.window="$store.tracks.removeTrack(event.detail.id)"
+>
     <!-- Header -->
     <header class="flex items-center justify-between">
         <h1 class="font-bold text-xl">
@@ -82,7 +86,7 @@
         x-data="player"
         x-cloak
     >
-        <audio x-ref="audioElm" type="audio/mp3" :src="$store.currentTrack.url" :loop="$store.currentTrack.isLooping"  class="hidden"></audio>
+        <audio x-ref="audioElm" type="audio/mp3" :src="$store.currentTrack.url" :loop="$store.currentTrack.isLooping" :paused="!$store.currentTrack.isPlaying"  class="hidden"></audio>
         <!-- Controls -->
         <div class="flex flex-col gap-y-6 w-full h-full p-12 justify-between">
             <!-- Close Button -->
@@ -90,8 +94,8 @@
                 <sl-icon name="chevron-compact-down" label="Close"></sl-icon>
             </button>
             <!-- Album Cover -->
-            <div class="my-4 w-52 h-52 rounded-lg bg-gray-200 flex items-center justify-center mx-auto">
-                <!-- <img id="trackCover" src="" alt="Album Cover" class="w-48 h-48 rounded-lg"> -->
+            <div class="my-4 w-52 h-52 rounded-lg bg-gray-200 flex items-center justify-center mx-auto overflow-hidden">
+                <img :src="$store.currentTrack.cover" alt="Album Cover" class="object-cover position-center">
             </div>
 
             <!-- Track Name, Progress Bar, Current Time and Duration -->
@@ -140,14 +144,14 @@
                         class="ml-1 text-6xl" 
                         x-show="!$store.currentTrack.isPlaying"
                         name="play-fill"
-                        @click="playCurrentTrack()"
+                        @click="$store.currentTrack.play()"
                     ></sl-icon-button>
 
                     <sl-icon-button x-ref="pauseButton"
                         aria-label="Pause"
                         class="ml-1 text-6xl"
                         x-show="$store.currentTrack.isPlaying"
-                        @click="pauseCurrentTrack()"
+                        @click="$store.currentTrack.pause()"
                         name="pause-fill"
                     ></sl-icon-button>
 
@@ -196,21 +200,34 @@
     </div>
 
     <!-- Mini Player -->
-    <div class="fixed bottom-0 left-0 right-0 p-4 bg-gray-200" @click="bigPlayerOpen = true" x-cloak>
-        <div class="flex items-center flex-1 justify-between">
-            <div class="flex items-center">
-                <sl-icon name="music-note"></sl-icon>
+    <div class="fixed bottom-0 left-0 right-0 bg-gray-200 z-40">
+        <div class="flex items-center flex-1 justify-between px-2">
+            <div class="flex flex-1 items-center p-4" @click="bigPlayerOpen = true">
+                <sl-icon name="vinyl"></sl-icon>
                 <span class="ml-2">
-                    <span id="miniPlayerTrackName">--</span>
+                    <span x-text="$store.currentTrack.title || '--'"></span>
                 </span>
             </div>
-            <button id="miniPlayPauseButton" aria-label="Play" class="ml-1">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1.5rem" height="1.5rem"><polygon points="5,3 19,12 5,21" /></svg>
-            </button>
+            <!-- Play/Pause Button -->
+            <sl-icon-button x-ref="playButtonMini"
+                aria-label="Play"
+                class="ml-1 text-2xl" 
+                x-show="!$store.currentTrack.isPlaying"
+                name="play-fill"
+                @click="$store.currentTrack.play()"
+            ></sl-icon-button>
+
+            <sl-icon-button x-ref="pauseButtonMini"
+                aria-label="Pause"
+                class="ml-1 text-2xl"
+                x-show="$store.currentTrack.isPlaying"
+                @click="$store.currentTrack.pause()"
+                name="pause-fill"
+            ></sl-icon-button>
         </div>
     </div>
 
-    
+    <!-- Root -->
     <div id="root" class="mt-12">
         <!-- Main screen -->
         <div id="mainScreen">
@@ -232,7 +249,40 @@
                     </sl-tab>
                   
                     <sl-tab-panel name="songs">
-                        <div id="tracksContainer"></div>
+                        <div id="tracksContainer">
+                            <template x-for="track in $store.tracks.all" :key="track.id">
+                                <div class="flex border-b border-gray-200">
+                                    <div class="flex items-center py-4 gap-x-2 w-full">
+                                        <div class="flex items-center gap-x-2" @click="prepareTrackToPlay(track.id, false)">
+                                            <img :src="track.cover" alt="Cover of the song" class="w-12 h-12 object-cover rounded-lg">
+                                            <div class="flex flex-col">
+                                                <h3 class="" x-text="track.title"></h3>
+                                                <small class="text-gray-400" x-text="track.artist"></small>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center ml-auto">
+                                            <sl-icon-button name="heart-fill" label="Favourite"></sl-icon-button>
+
+                                            <sl-icon-button
+                                                name="play-fill"
+                                                class="text-2xl"
+                                                label="Play"
+                                                @click="prepareTrackToPlay(track.id, true)"
+                                                x-show="!$store.currentTrack.isPlaying"
+                                            ></sl-icon-button>
+
+                                            <sl-icon-button x-ref="pauseButtonInList"
+                                                aria-label="Pause"
+                                                class="ml-1 text-2xl"
+                                                x-show="$store.currentTrack.isPlaying"
+                                                @click="$store.currentTrack.pause()"
+                                                name="pause-fill"
+                                            ></sl-icon-button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
                     </sl-tab-panel>
                     <sl-tab-panel name="favourites">This is the custom tab panel.</sl-tab-panel>
                   </sl-tab-group>

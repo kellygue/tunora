@@ -17,6 +17,11 @@ self.addEventListener('install', (event) => {
 
 // Fetch event - Serve cached assets or return index.html for non-static requests
 self.addEventListener('fetch', (event) => {
+
+  if (event.request.url.includes('discogs.com')) {
+    return; // Let this request go through to the network without service worker interference
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {

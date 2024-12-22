@@ -25,27 +25,19 @@ document.addEventListener('alpine:init', () => {
         },
 
         async initWatchers() {
-            // No watchers needed for this component yet.
+            // Set up a watcher for the isPlaying property.
+            // This watcher will play or pause the audio element based on the value of isPlaying.
+            this.$watch('$store.currentTrack.isPlaying', (value) => {
+            if (value) {
+                this.$refs.audioElm.play();
+            } else {
+                this.$refs.audioElm.pause();
+            }
+            })
         },
 
-        /**
-         * Plays the current track if it is not already playing and a URL is available.
-         */
-        async playCurrentTrack() {
-            if (this.currentTrackStore.isPlaying === true || this.currentTrackStore.url === null) return
+        async setCurrentPlayingTrack() {
 
-            this.elmStore.audio.play()
-            this.$store.currentTrack.isPlaying = true
-        },
-
-        /**
-         * Pauses the current track if it is playing and a URL is available.
-         */
-        async pauseCurrentTrack() {
-            if (this.currentTrackStore.isPlaying === false || this.currentTrackStore.url === null) return
-
-            this.elmStore.audio.pause()
-            this.$store.currentTrack.isPlaying = false
         },
 
         async initListeners() {
@@ -72,7 +64,7 @@ document.addEventListener('alpine:init', () => {
 
                 // If the track is not playing, start playing it.
                 if (this.currentTrackStore.isPlaying || this.elmStore.audio.currentTime <= 0) {
-                    await this.playCurrentTrack()
+                    await this.$store.currentTrack.play()
                 }
             })
 
@@ -87,7 +79,13 @@ document.addEventListener('alpine:init', () => {
                 this.elmStore.currentTime.textContent = this.formatTime(this.elmStore.audio.currentTime)
 
                 // If the track has finished playing, reset the player.
-                if (this.elmStore.audio.currentTime >= this.elmStore.audio.duration) {
+                if (parseFloat(this.elmStore.seekBar.value) >= parseFloat(this.elmStore.seekBar.max)) {
+                    
+                    if (this.$store.currentTrack.isLooping) {
+                        this.$dispatch('restart-current-track')
+                        return
+                    }
+
                     await this.resetPlayer()
                 }
             })
@@ -119,8 +117,14 @@ document.addEventListener('alpine:init', () => {
             /**
              * Event listener for the custom event dispatched when the streaming url of a track has been returned form the API.
              */
-            window.addEventListener('trackUrlReturned', (e) => {
+            window.addEventListener('track-returned', (e) => {
                 this.$store.currentTrack.loadDetails(e.detail.id, e.detail.url)
+            })
+
+            window.addEventListener('restart-current-track', (e) => {
+                this.$store.currentTrack.pause()
+                this.elmStore.audio.currentTime = 0
+                this.$store.currentTrack.play()
             })
         },
         
@@ -140,5 +144,9 @@ document.addEventListener('alpine:init', () => {
         async showQueue() {
             console.log(this.$store.queue.tracks)
         },
+
+        async resetPlayer() {
+            this.$store.currentTrack.reset()
+        }
     }))
 })

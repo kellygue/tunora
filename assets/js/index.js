@@ -1,3 +1,5 @@
+import addPage from './pages/add.js'
+
 document.addEventListener('alpine:init', () => {
     
     Alpine.data('indexPage', () => ({
@@ -47,75 +49,102 @@ document.addEventListener('alpine:init', () => {
                 }
             })
 
-            // Display all the tracks and initialize event listeners once tracks are shown
-            await this.showTracks()
-            .then(async () => {
-                await this.initListeners()
-            })
+            await this.initListeners()
+            
         },
 
         /**
-         * Initializes all event listeners for the audio player and song buttons.
+         * Initializes event listeners
          */
         async initListeners() {
-            // A list of all song button elements that allow the user to select a track.
-            let songBtns = document.querySelectorAll('.songBtn');
-
-            // Attach click event listeners to each song button to set the currently playing track.
-            songBtns.forEach(songBtn => {
-
-                // The ID of the song associated with the button.
-                let songId = songBtn.getAttribute('data-song');
-
-                songBtn.addEventListener('click', () => this.set_current_playing_track(songId))
-
-            });
-        },
-
-        // Display all the tracks
-        async showTracks() {
-            const tracks = this.trackStore.all
-            
-            tracks.forEach(track => {
-                let elm = this.buildSongElm(track)
-                document.querySelector('#tracksContainer').appendChild(elm)
-            });
+            // No listeners for now
         },
 
 
         /**
-         * Sets the current track to be played by fetching the track's URL and updating the audio element.
-         * If the same track is clicked again, it resets the audio to the start.
-         * @param {string} songId - The unique ID of the song to set as the current track.
+         * Prepares a track to play by fetching its URL and resetting playback if the same track is clicked.
+         * 
+         * @async
+         * @param {string} songId - The ID of the song to be played.
+         * @returns {Promise<void>} - A promise that resolves when the track is prepared.
+         * @throws {Error} - Throws an error if there is an issue fetching the track.
          */
-        async set_current_playing_track(songId) {
-            // If the song clicked is already the current track, reset the playback to the beginning.
+        async prepareTrackToPlay(songId, shouldResumeIfSame = false) {
+
+            // Reset playback if the same track is clicked
             if (songId === this.currentTrackStore.id) {
-                this.elmStore.audio.currentTime = 0;  // Reset the audio to the start.
-                return;  // Exit the function as no further action is needed.
+
+                if (shouldResumeIfSame && !this.$store.currentTrack.isPlaying) {
+                    this.$store.currentTrack.play()
+                    return
+                }
+
+                this.$dispatch('restart-current-track')
+                return
             }
 
-            // Indicate that a request is in progress (to prevent multiple simultaneous requests).
+            // Set loading state to true
             this.appStore.isLoading = true
 
-            // Fetch the song URL from the server using the songId.
-            fetch(`${this.$store.api.base_endpoint}/play/${songId}`)
-                .then(response => response.text())  // Parse the response as plain text (song URL).
-                .then(data => {
-                    // Dispatch an event to indicate that the track is ready to be played.
-                    this.$dispatch('trackUrlReturned', {
-                        id: songId,
-                        url: data
+            // Fetch the track URL from the backend
+            try {
+
+                // Ensure that track.urlLastUpdated is a valid number (milliseconds since epoch).
+                if (this.trackStore.all.length > 0) {
+
+                    const _track = this.trackStore.all.find(track => track.id === songId)
+
+                    if (_track && _track.url && _track.urlLastUpdated) {
+                        
+                        const trackExpiryTime = Date.now() - this.$store.app.trackUrlExpiry
+                        // Check if the track URL has not expired
+                        if (_track.urlLastUpdated > trackExpiryTime) {
+
+                            // Dispatch the event with the track URL
+                            this.$dispatch('track-returned', {
+                                id: songId,
+                                url: _track.url
+                            });
+
+                            // Set the loading state to false
+                            this.appStore.isLoading = false;
+
+                            // Log the track info for debugging
+                            return
+                        }
+                    }
+                }
+                
+                const response = await fetch(`${this.$store.backend.base_endpoint}/play/${songId}`)
+                const data = await response.text()
+
+                if (data === 'invalid') {
+
+                    this.$dispatch('track-invalid', {
+                        id: songId
                     })
+
+                    throw new Error("Track ID is invalid")
+                }
+
+                this.$dispatch('track-returned', {
+                    id: songId,
+                    url: data
                 })
-                .catch(error => {
-                    // Handle any errors that occur during the fetch request.
-                    console.error('Error fetching the track:', error);
-                })
-                .finally(() => {
-                    // Indicate that the request is complete (whether successful or not).
-                    this.appStore.isLoading = false;
-                });
+
+            } catch (error) {
+                
+                notyf.error('Error fetching the track. Track ID might be corrupted.')
+
+                // Log the error to the console if debug mode is enabled
+                if (this.appStore.debugMode) {
+                    console.error('[Error] fetching the track:', error)
+                }
+
+            } finally {
+                // Set loading state to false
+                this.appStore.isLoading = false;
+            }
         },
 
         /**
@@ -133,55 +162,8 @@ document.addEventListener('alpine:init', () => {
             // Return the formatted string in "mm:ss" format, padding seconds if necessary
             return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
         },
-
-        /**
-         * Builds a song element (button) to display song details and a play icon.
-         * @param {Object} song - The song object containing song details.
-         * @param {string} song.id - The unique ID of the song.
-         * @param {string} song.title - The title of the song.
-         * @param {string} song.artist - The artist of the song.
-         * @returns {HTMLButtonElement} - The button element representing the song.
-         */
-        buildSongElm(song) {
-            // Create the button that will represent the song
-            const button = document.createElement('button');
-            button.className = 'songBtn flex items-center w-full border-b p-4';
-            button.setAttribute('data-song', song.id);  // Set the song ID as a data attribute
-
-            // Create a container for the song details
-            const songDetailsDiv = document.createElement('div');
-            songDetailsDiv.className = 'flex flex-col gap-y-1 justify-start items-start';
-
-            // Create and append the song title
-            const songTitleSpan = document.createElement('span');
-            songTitleSpan.textContent = song.title;
-
-            // Create and append the artist name
-            const artistSmall = document.createElement('small');
-            artistSmall.textContent = song.artist;
-
-            // Append title and artist to the details container
-            songDetailsDiv.appendChild(songTitleSpan);
-            songDetailsDiv.appendChild(artistSmall);
-
-            // Create a container for the play icon
-            const playIconDiv = document.createElement('div');
-            playIconDiv.className = 'ml-auto';
-
-            // Create the play icon element
-            const playIcon = document.createElement('sl-icon');
-            playIcon.setAttribute('name', 'play-fill');  // Set the play icon
-            playIcon.className = 'text-xl';  // Set the icon size
-
-            // Append the play icon to the icon container
-            playIconDiv.appendChild(playIcon);
-
-            // Append the song details and play icon container to the button
-            button.appendChild(songDetailsDiv);
-            button.appendChild(playIconDiv);
-
-            // Return the completed button element
-            return button;
-        }
     }))
+
+    // Initialize components for other pages
+    Alpine.data('addPage', addPage)    
 })
