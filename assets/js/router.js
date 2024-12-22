@@ -1,56 +1,31 @@
-import page from "//unpkg.com/page/page.mjs"
-// import { ENV } from "./config.js"
+export default () => ({
+	screens: ['mainScreen', 'addTrackScreen'],
+	currentScreen: null,
 
-page(`${ENV.BASE_URL}`, async () => {
-    await preNavigate(true)
+	init() {
+		this.initScreens()
+		this.initLinkHandlers()
+		this.currentScreen = 'mainScreen'
+		console.log('--')
+	},
+
+	initScreens() {
+		
+	},
+
+	initLinkHandlers() {
+		let links = document.querySelectorAll('[link]')
+
+		links.forEach(link => {
+			link.addEventListener('click', (event) => {
+				const targetScreen = event.target.getAttribute('to') || 'mainScreen'
+				this.handleNavigation(targetScreen)
+			})
+		})
+	},
+
+	handleNavigation(targetScreen) {
+		this.currentScreen = targetScreen
+	}
+
 })
-
-page(`${ENV.BASE_URL}pages/add`, async () => {
-    await preNavigate()
-    // Getting the content of the page
-    const content = await fetch(`${ENV.BASE_URL}pages/add.html`).then(response => response.text())
-    document.querySelector('#pageContainer').innerHTML = content
-    // Loading the necessary scripts for the page
-    loadScript(`${ENV.BASE_URL}assets/js/pages/add.js`)
-})
-
-page()
-
-async function preNavigate(isHome = false) {
-    if (isHome) {
-        document.querySelector('#mainScreen').style.display = 'block'
-        document.querySelector('#pageContainer').style.display = 'none'
-        return
-    }
-
-    document.querySelector('#mainScreen').style.display = 'none'
-    document.querySelector('#pageContainer').style.display = 'block'
-}
-
-function loadScript(src, callback, errorCallback) {
-    // Check if the script is already added to the DOM
-    const existingScript = document.querySelector(`script[src="${src}"]`);
-    if (existingScript) {
-      console.log(`Script already loaded: ${src}`);
-      if (callback) callback();  // Call callback immediately if script is already loaded
-      return;
-    }
-  
-    // Create the script tag
-    const script = document.createElement('script');
-    script.src = src;
-    script.async = true; // Load the script asynchronously
-    script.type = "module"
-    script.onload = function() {
-      console.log(`Script loaded successfully: ${src}`);
-      if (callback) callback();
-    };
-    
-    script.onerror = function(error) {
-      console.error(`Failed to load script: ${src}`, error);
-      if (errorCallback) errorCallback(error);
-    };
-  
-    // Append the script to the body
-    document.body.appendChild(script);
-}

@@ -29,6 +29,8 @@
     <script src="assets/js/index.js" type="module" defer></script>
     <script src="assets/js/store.js" type="module" defer></script>
     <script src="assets/js/playerControls.js" type="module" defer></script>
+    <!-- Screens's specific scripts -->
+    <script src="./assets/js/pages/add.js" type="module" defer></script>
 
     <!-- My styles -->
     <link rel="stylesheet" href="assets/css/index.css">
@@ -60,18 +62,18 @@
     <!-- Header -->
     <header class="flex items-center justify-between">
         <h1 class="font-bold text-xl">
-            <a href="" class="px-3 py-1 rounded-md border-2 border-black">
+            <button link to="mainScreen"  class="px-3 py-1 rounded-md border-2 border-black">
                 Tunora
-            </a>
+            </button>
         </h1>
 
         <div>
             <ul class="flex items-center">
                 <li>
-                    <sl-icon-button name="house" label="Home" href="/" style="font-size: 1.3rem;"></sl-icon-button>
+                    <sl-icon-button name="house" label="Home" link to="mainScreen" style="font-size: 1.3rem;"></sl-icon-button>
                 </li>
                 <li>
-                    <sl-icon-button name="plus-square" label="Add a new song" href="pages/add" style="font-size: 1.3rem;"></sl-icon-button>
+                    <sl-icon-button name="plus-square" label="Add a new song" to="addTrackScreen" link style="font-size: 1.3rem;"></sl-icon-button>
                 </li>
             </ul>
         </div>
@@ -231,11 +233,12 @@
     </div>
 
     <!-- Root -->
-    <div id="root" class="mt-12">
+    <div id="root" class="mt-12" x-data="router">
         <!-- Main screen -->
         <div id="mainScreen">
 
-            <div>
+            <div x-show="currentScreen === 'mainScreen'"
+            >
 
                 <sl-tab-group>
                     <sl-tab slot="nav" panel="songs">
@@ -259,7 +262,7 @@
                                         <div class="flex items-center gap-x-2" @click="prepareTrackToPlay(track.id, false)">
                                             <img :src="track.cover" alt="Cover of the song" class="w-12 h-12 object-cover rounded-lg">
                                             <div class="flex flex-col">
-                                                <h3 class="" x-text="track.title"></h3>
+                                                <h3 class="line-clamp-1" x-text="track.title"></h3>
                                                 <small class="text-gray-400" x-text="track.artist"></small>
                                             </div>
                                         </div>
@@ -293,8 +296,34 @@
 
         </div>
 
-        <!-- Other Screen -->
-        <div id="pageContainer"></div>
+        <!-- Add Track Screen -->
+        <div id="addTrackScreen" x-data="addPage">
+            <div x-show="currentScreen === 'addTrackScreen'"
+            >
+                <form action="#"  class="mb-12 md:mb-0" @submit.prevent="addTrack()">
+                    <div class="flex flex-col gap-y-6">
+                        <sl-carousel navigation x-ref="coverChoicesContainer" style="--aspect-ratio: 1/1">
+                            <template x-for="(cover, index) in coverChoices" :key="cover + index">
+                                <sl-carousel-item>
+                                    <img :src="cover" alt="Cover of the song"  class="w-72 h-72 object-cover">
+                                </sl-carousel-item>
+                            </template>
+                        </sl-carousel>
+            
+                        <div class="flex gap-y-2 flex-col">
+                            <sl-input label="Title" x-model="track.title"></sl-input>
+                            <sl-input label="Artist" x-model="track.artist"></sl-input>
+                            <sl-input label="ID" x-model="track.id"></sl-input>
+                        </div>
+                        
+                        <div>
+                            <sl-button variant="default" @click="search()">Search</sl-button>
+                            <sl-button variant="primary" type="submit">Add Track</sl-button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </body>
 </html>
