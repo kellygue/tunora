@@ -34,7 +34,7 @@ document.addEventListener('alpine:init', () => {
         currentPage: 'home',
         discogsAccessToken: "YCdDUCsvhIlOSUaDsLKeHqsLYmnIPLuGNaxmsjoV",
         discogBaseEndpoint: "https://api.discogs.com/database",
-        debugMode: true,
+        debugMode: false, // Set to false before deployment
         trackUrlExpiry: 2 * 60 * 60 * 1000, // Expire the URL after 2 hours
     })
 
