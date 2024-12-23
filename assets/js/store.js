@@ -135,8 +135,12 @@ document.addEventListener('alpine:init', () => {
         isVisible: false,
         draggedTrack: {
             id: undefined,
-            index: undefined
+            index: undefined,
+            cover: undefined,
+            title: undefined,
+            artist: undefined
         },
+        floatingStyle: { top: 0, left: 0 },
 
         init() {
         },
@@ -277,14 +281,21 @@ document.addEventListener('alpine:init', () => {
             this.isShuffled = true
         },
 
-        dragStart(trackId, index) {
+        dragStart(trackId, index, isTouchEvent = null) {
+            console.log('--', index)
+            if (isTouchEvent !== null) {
+                isTouchEvent.preventDefault()
+                this.updateFloatingStyle(isTouchEvent.touches[0]);
+            }
+
+            let _track = this.tracks.find(t => t.id == trackId)
             this.draggedTrack = {
-                id: trackId,
+                ..._track,
                 index: index
             }
         },
 
-        dropTrack(event, targetId, targetIndex) {
+        dropTrack(event, targetId, targetIndex, isTouchEnd = false) {
             event.preventDefault()
 
             if (targetIndex === this.draggedTrack.index) return
@@ -302,15 +313,56 @@ document.addEventListener('alpine:init', () => {
                 this.currentTrackIndex = this.tracks.findIndex(track => track.id === targetId)
             }
 
+            this.draggedTrack = {
+                id: undefined,
+                index: undefined,
+                cover: undefined,
+                title: undefined,
+                artist: undefined
+            }
+        },
+
+        touchMove(event) {
+            this.updateFloatingStyle(event.touches[0])
+        },
+
+        touchEnd(event, trackId) {
+            const touchY = event.changedTouches[0].clientY; // Get touch position
+            const droppedIndex = this.getMobileDropIndex(touchY);
+
+            if (droppedIndex !== -1) {
+                let _targetTrack = this.tracks.find((t, i) => i === droppedIndex)
+                this.dropTrack(event, _targetTrack.id, droppedIndex, true)
+            }
 
             this.draggedTrack = {
                 id: undefined,
-                index: undefined
+                index: undefined,
+                cover: undefined,
+                title: undefined,
+                artist: undefined
             }
+        },
 
-            console.log(this.tracks, this.currentTrackIndex)
+        getMobileDropIndex(touchY) {
+            const listItems = document.querySelectorAll('.queue-track-item')
+        
+            for (let i = 0; i < listItems.length; i++) {
+              const rect = listItems[i].getBoundingClientRect();
+        
+              // Check if the touch Y position is within the current element's bounds
+              if (touchY >= rect.top && touchY <= rect.bottom) {
+                return i;
+              }
+            }
+        
+            return -1; // Return -1 if no valid index is found
+        },
 
-        }
+        updateFloatingStyle(touch) {
+            this.floatingStyle.top = touch.clientY;
+            this.floatingStyle.left = touch.clientX;
+        },
     })
 
 
