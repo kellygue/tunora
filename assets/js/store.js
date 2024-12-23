@@ -34,7 +34,7 @@ document.addEventListener('alpine:init', () => {
         currentPage: 'home',
         discogsAccessToken: "YCdDUCsvhIlOSUaDsLKeHqsLYmnIPLuGNaxmsjoV",
         discogBaseEndpoint: "https://api.discogs.com/database",
-        debugMode: false, // Set to false before deployment
+        debugMode: true, // Set to false before deployment
         trackUrlExpiry: 2 * 60 * 60 * 1000, // Expire the URL after 2 hours
     })
 
@@ -86,9 +86,11 @@ document.addEventListener('alpine:init', () => {
             this.artist = track.artist
             this.cover = track.cover
 
-            window.dispatchEvent(new CustomEvent('trackDetailsLoaded', {
-                ...track,
-                url: this.url
+            window.dispatchEvent(new CustomEvent('track-details-loaded', {
+                detail: {
+                    ...track,
+                    url: this.url
+                }
             }))
         },
 
@@ -124,9 +126,51 @@ document.addEventListener('alpine:init', () => {
     // Create a new store named 'queue' with the following properties and methods
     Alpine.store('queue', {
         tracks: [],
+        unshuflledTracks: [],
+        currentTrackIndex: 0,
+        shouldRepeat: false,
+        isShuffled: false,
+        canPlayNext: true,
+        canPlayPrevious: false,
+        isVisible: false,
+        draggedTrack: {
+            id: undefined,
+            index: undefined
+        },
 
-        createQueue(tracks) {
-            this.tracks = tracks
+        init() {
+        },
+
+        createQueue() {
+            // If the queue is already created, skip
+            if (this.tracks.length > 0) {
+                Alpine.store('currentTrack').reset()
+                Alpine.store('currentTrack').play()
+                return
+            }
+
+            let _allTracks = Alpine.store('tracks').all,
+                currentTrackId = Alpine.store('currentTrack').id,
+                _currentTrackIndex = _allTracks.findIndex(track => track.id == currentTrackId),
+                currentTrack = undefined
+
+            if (_currentTrackIndex < 0) {
+                if (Alpine.store('app').debugMode) {
+                    console.warn("Unable to create queue. Current track index is not in the tracks array")
+                }
+                return
+            }
+
+            currentTrack = _allTracks[_currentTrackIndex]
+
+            let _beforeCurrentTrack = _allTracks.slice(0, _currentTrackIndex),
+                _afterCurrentTrack = _allTracks.slice(_currentTrackIndex + 1)
+
+            this.tracks = [currentTrack, ..._afterCurrentTrack, ..._beforeCurrentTrack]
+            this.unshuflledTracks = [currentTrack, ..._afterCurrentTrack, ..._beforeCurrentTrack]
+
+            // Start the queue if it created
+            Alpine.store('currentTrack').play()
         },
 
         addToQueue(track, position) {
@@ -137,8 +181,135 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        removeFromQueue(trackId) {
-            this.tracks = this.tracks.filter(track => track.id !== trackId)
+        playNext() {
+
+            if (this.currentTrackIndex === (this.tracks.length - 1)) {
+
+                if (!this.shouldRepeat) {
+                    return
+                }
+
+                this.currentTrackIndex = -1
+            }
+
+            let nextTrackIndex = this.currentTrackIndex + 1,
+            nextTrack = this.tracks[nextTrackIndex]
+
+            window.dispatchEvent(new CustomEvent('queue-track-triggered', {
+                detail: {
+                    id: nextTrack.id,
+                    url: nextTrack.url
+                }
+            }))
+
+            this.currentTrackIndex = nextTrackIndex
+
+            if (this.currentTrackIndex === this.tracks.length - 1 && !this.shouldRepeat) {
+                this.canPlayNext = false
+            } else {
+                this.canPlayNext = true
+            }
+        },
+
+        playPrevious() {
+            
+            if (this.currentTrackIndex === 0) {
+
+                if (!this.shouldRepeat) {
+                    return
+                }
+
+                this.currentTrackIndex = this.tracks.length
+            }
+
+            let nextTrackIndex = this.currentTrackIndex - 1,
+            nextTrack = this.tracks[nextTrackIndex]
+
+            window.dispatchEvent(new CustomEvent('queue-track-triggered', {
+                detail: {
+                    id: nextTrack.id,
+                    url: nextTrack.url
+                }
+            }))
+
+            this.currentTrackIndex = nextTrackIndex
+
+            if (this.currentTrackIndex === 0 && !this.shouldRepeat) {
+                this.canPlayPrevious = false
+            } else {
+                this.canPlayPrevious = true
+            }
+        },
+
+        playTrack(trackId) {
+            this.currentTrackIndex = this.tracks.findIndex(track => track.id === trackId)
+            window.dispatchEvent(new CustomEvent('queue-track-triggered', {
+                detail: {
+                    id: trackId
+                }
+            }))
+        },
+
+        removeFromQueue(trackId, index) {
+            if (this.currentTrackIndex === index) {
+                return
+            }
+
+            this.tracks = [...this.tracks.filter((track, _index) => _index !== index)]
+        },
+
+        shuffleQueue() {
+
+            if (this.isShuffled === true) {
+                let currentTrack = this.tracks.find((track, index) => index === this.currentTrackIndex) 
+                this.tracks = [...this.unshuflledTracks]
+                this.currentTrackIndex = this.tracks.findIndex(track => track.id === currentTrack.id)
+                this.isShuffled = false
+                return
+            }
+
+            let currentTrack = this.tracks.find((track, index) => index === this.currentTrackIndex)           
+            this.tracks.sort(() => Math.random() - 0.5)
+            let filtered_tracks = this.tracks.filter(track => track.id !== currentTrack.id)
+            this.tracks = [currentTrack, ...filtered_tracks]
+            this.currentTrackIndex = 0
+
+            this.isShuffled = true
+        },
+
+        dragStart(trackId, index) {
+            this.draggedTrack = {
+                id: trackId,
+                index: index
+            }
+        },
+
+        dropTrack(event, targetId, targetIndex) {
+            event.preventDefault()
+
+            if (targetIndex === this.draggedTrack.index) return
+
+            let movedTrack = this.tracks[this.draggedTrack.index]
+
+            this.tracks.splice(this.draggedTrack.index, 1)
+            this.tracks.splice(targetIndex, 0, movedTrack)
+
+            if (this.currentTrackIndex === this.draggedTrack.index) {
+                this.currentTrackIndex = this.tracks.findIndex(track => track.id === this.draggedTrack.id)
+            }
+
+            if (this.currentTrackIndex === targetIndex) {
+                this.currentTrackIndex = this.tracks.findIndex(track => track.id === targetId)
+            }
+
+
+            this.draggedTrack = {
+                id: undefined,
+                index: undefined
+            }
+
+            console.log(this.tracks, this.currentTrackIndex)
+
         }
     })
 

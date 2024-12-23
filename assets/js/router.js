@@ -6,7 +6,6 @@ export default () => ({
 		this.initScreens()
 		this.initLinkHandlers()
 		this.currentScreen = 'mainScreen'
-		console.log('--')
 	},
 
 	initScreens() {

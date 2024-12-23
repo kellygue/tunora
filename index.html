@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.19.1/cdn/themes/light.css" />
     <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.19.1/cdn/shoelace-autoloader.js"></script>
 
+
     <!-- Store JS -->
     <script src="assets/js/store.everything.min.js"></script>
 
@@ -34,6 +35,9 @@
 
     <!-- My styles -->
     <link rel="stylesheet" href="assets/css/index.css">
+
+    <!-- Alpine Plugins -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/sort@3.x.x/dist/cdn.min.js"></script>
 
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -58,6 +62,10 @@
     x-data="indexPage"
     @track-returned.window="$store.tracks.updateTrack({ url: event.detail.url, id: event.detail.id })"
     @track-invalid.window="$store.tracks.removeTrack(event.detail.id)"
+    @track-details-loaded.window="$store.queue.createQueue()"
+    @queue-track-triggered.window="prepareTrackToPlay(event.detail.id)"
+    @play-next-track.window="$store.queue.playNext()"
+    @play-previous-track.window="$store.queue.playPrevious()"
 >
     <!-- Header -->
     <header class="flex items-center justify-between">
@@ -80,7 +88,7 @@
     </header>
 
     <!-- Big Player -->
-    <div class="fixed bottom-0 left-0 right-0 top-0 z-50 bg-gray-100 min-h-screen min-w-screen transition-all scacle-y-100 origin-bottom"
+    <div class="fixed bottom-0 left-0 right-0 top-0 z-40 bg-gray-100 min-h-screen min-w-screen transition-all scacle-y-100 origin-bottom"
         x-show="bigPlayerOpen"
         x-transition:enter="transition-all duration-300 transform ease-out"
         x-transition:enter-start="transform scale-y-0 opacity-0"
@@ -140,7 +148,13 @@
                 <div class="flex items-center w-full mx-auto justify-around">
                     <!-- Previous -->
                     <sl-tooltip content="Play the previous song">
-                        <sl-icon-button name="skip-start-fill" label="Previous" class="text-4xl"></sl-icon-button>
+                        <sl-icon-button
+                            name="skip-start-fill"
+                            label="Previous"
+                            class="text-4xl"
+                             @click="$dispatch('play-previous-track')"
+                             :diabled="!$store.queue.canPlayPrevious"
+                        ></sl-icon-button>
                     </sl-tooltip>
                     
                     <!-- Play/Pause Button -->
@@ -162,7 +176,13 @@
 
                     <!-- Next -->
                     <sl-tooltip content="Play the next song">
-                        <sl-icon-button name="skip-end-fill" label="Next" class="text-4xl"></sl-icon-button>
+                        <sl-icon-button
+                            name="skip-end-fill"
+                            label="Next"
+                            class="text-4xl"
+                            @click="$dispatch('play-next-track')"
+                            :diabled="!$store.queue.canPlayNext"
+                        ></sl-icon-button>
                     </sl-tooltip>
                 </div>
             </div>
@@ -189,23 +209,97 @@
             <!-- Footer container loop, shuffle and queue buttons -->
             <div class="flex items-center justify-between">
                 <sl-icon-button
-                    name="infinity"
+                    name="repeat"
                     label="Loop"
-                    id="trackLoopBtn"
+                    id="trackLoopButton"
                     @click="toggleLoop()"
                     class="rounded"
-                    :class="$store.currentTrack.isLooping ? 'bg-blue-200' : 'bg-transparent'"
-                ></sl-icon-button>
+                    :class="$store.queue.shouldRepeat ? 'bg-blue-200' : 'bg-transparent'"
+                >
+                </sl-icon-button>
                 
-                <sl-icon-button name="shuffle" label="Shuffle" id="trackShuffleBtn" @click="shuffleQueue()"></sl-icon-button>
-                <sl-icon-button name="music-note-list" label="Queue" id="openQueueBtn" @click="showQueue()"></sl-icon-button>
+                <sl-icon-button
+                    name="shuffle"
+                    label="Shuffle"
+                    id="trackShuffleBtn"
+                    @click="shuffleQueue()"
+                    class="rounded"
+                    :class="$store.queue.isShuffled ? 'bg-blue-200' : 'bg-transparent'"
+                ></sl-icon-button>
+                <sl-icon-button
+                    name="music-note-list"
+                    label="Queue"
+                    id="openQueueBtn"
+                    @click="showQueue()"
+                    :class="$store.queue.isVisible ? 'bg-blue-200' : 'bg-transparent'"
+                ></sl-icon-button>
             </div>
 
         </div>
+
+        <!-- Queue box -->
+        <div class="fixed bottom-0 left-0 right-0 top-0 z-50 bg-gray-100 min-h-screen min-w-screen transition-all scacle-y-100 origin-bottom"
+            x-show="$store.queue.isVisible"
+            x-transition:enter="transition-all duration-300 transform ease-out"
+            x-transition:enter-start="transform scale-y-0 opacity-0"
+            x-transition:enter-end="transform scale-y-100 opacity-100"
+            x-transition:leave="transition-all duration-300 transform ease-in"
+            x-transition:leave-start="transform scale-y-100 opacity-100"
+            x-transition:leave-end="transform scale-y-0 opacity-30"
+            x-cloak
+        >
+            <div class="flex flex-col p-4 gap-y-6">
+                <div class="flex justify-end">
+                    <sl-icon-button name="chevron-down" @click="showQueue()"></sl-icon-button>
+                </div>
+                <!-- Track list -->
+                <div>
+                    <h3 class="text-xl font-bold px-4 mb-4">
+                        Queue
+                    </h3>
+                    <ul id="queueTracksContaine">
+                        <template x-for="(track, index) in $store.queue.tracks" :key="track.id">
+                            <li class="flex items-center border-b border-gray-200 px-4 rounded"
+                                :class="$store.currentTrack.id == track.id ? 'bg-gray-200' : 'bg-transparent'"
+                                :key="track.id"
+                                @click="$store.queue.playTrack(track.id)"
+                                draggable="true"
+                                @dragstart="$store.queue.dragStart(track.id, index)"
+                                @dragover.prevent
+                                @drop="$store.queue.dropTrack($event, track.id, index)"
+                            >
+                                <div class="flex items-center py-4 gap-x-2 w-full">
+                                    <sl-icon-button name="grip-vertical"></sl-icon-button>
+                                    <div class="flex items-center gap-x-2" @click="prepareTrackToPlay(track.id, false, true)">
+                                        <img :src="track.cover" alt="Cover of the song" class="w-12 h-12 object-cover rounded-lg">
+                                        <div class="flex flex-col">
+                                            <h3 class="line-clamp-1" x-text="track.title"></h3>
+                                            <small class="text-gray-400" x-text="track.artist"></small>
+                                        </div>
+                                    </div>
+                                </div>    
+                                <div>
+                                    <sl-icon-button
+                                        name="trash3"
+                                        @click="$store.queue.removeFromQueue(track.id, index)"
+                                        x-show="$store.queue.currentTrackIndex !== index"
+                                        class="text-red-400"
+                                    ></sl-icon-button>
+                                </div>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 
+
+
+
+
     <!-- Mini Player -->
-    <div class="fixed bottom-0 left-0 right-0 bg-gray-200 z-40">
+    <div class="fixed bottom-0 left-0 right-0 bg-gray-200" :class="$store.queue.isVisible ? 'z-50' : 'z-30'">
         <div class="flex items-center flex-1 justify-between px-2">
             <div class="flex flex-1 items-center p-4" @click="bigPlayerOpen = true">
                 <sl-icon name="vinyl"></sl-icon>
@@ -232,6 +326,9 @@
         </div>
     </div>
 
+
+
+
     <!-- Root -->
     <div id="root" class="mt-12" x-data="router">
         <!-- Main screen -->
@@ -257,7 +354,8 @@
                     <sl-tab-panel name="songs">
                         <div id="tracksContainer">
                             <template x-for="track in $store.tracks.all" :key="track.id">
-                                <div class="flex border-b border-gray-200">
+                                <div class="flex border-b border-gray-200 w-full">
+
                                     <div class="flex items-center py-4 gap-x-2 w-full">
                                         <div class="flex items-center gap-x-2" @click="prepareTrackToPlay(track.id, false)">
                                             <img :src="track.cover" alt="Cover of the song" class="w-12 h-12 object-cover rounded-lg">
@@ -271,16 +369,16 @@
 
                                             <sl-icon-button
                                                 name="play-fill"
-                                                class="text-2xl"
+                                                class="ml-1 text-2xl"
                                                 label="Play"
                                                 @click="prepareTrackToPlay(track.id, true)"
-                                                x-show="!$store.currentTrack.isPlaying"
+                                                x-show="!$store.currentTrack.isPlaying || $store.currentTrack.id !== track.id"
                                             ></sl-icon-button>
 
                                             <sl-icon-button x-ref="pauseButtonInList"
                                                 aria-label="Pause"
                                                 class="ml-1 text-2xl"
-                                                x-show="$store.currentTrack.isPlaying"
+                                                x-show="$store.currentTrack.isPlaying && $store.currentTrack.id == track.id"
                                                 @click="$store.currentTrack.pause()"
                                                 name="pause-fill"
                                             ></sl-icon-button>
@@ -290,11 +388,19 @@
                             </template>
                         </div>
                     </sl-tab-panel>
-                    <sl-tab-panel name="favourites">This is the custom tab panel.</sl-tab-panel>
+
+                    <sl-tab-panel name="favourites">
+                        <!-- ------------------------------------- -->
+                    </sl-tab-panel>
                   </sl-tab-group>
             </div>
 
         </div>
+
+
+
+
+
 
         <!-- Add Track Screen -->
         <div id="addTrackScreen" x-data="addPage">
