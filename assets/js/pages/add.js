@@ -64,8 +64,23 @@ export default () => ({
         }
 
         this.$store.tracks.addTrack(track).then(() => {
+            this.resetState()
+
             notyf.success(`${track.title} has been added successfully`)
         })
 
+    },
+
+    resetState() {
+        this.track = {
+            id: '',
+            title: '',
+            artist: '',
+            image: '',
+            url: '',
+        },
+
+        this.chosenCover = null
+        this.coverChoices = [this.defaultCover]
     }
 })
