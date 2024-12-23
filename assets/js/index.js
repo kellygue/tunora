@@ -51,6 +51,8 @@ document.addEventListener('alpine:init', () => {
             })
 
             await this.initListeners()
+
+            
             
         },
 
@@ -70,7 +72,7 @@ document.addEventListener('alpine:init', () => {
          * @returns {Promise<void>} - A promise that resolves when the track is prepared.
          * @throws {Error} - Throws an error if there is an issue fetching the track.
          */
-        async prepareTrackToPlay(songId, shouldResumeIfSame = false) {
+        async prepareTrackToPlay(songId, shouldResumeIfSame = false, triggeredFromTheQueue = false) {
 
             // Reset playback if the same track is clicked
             if (songId === this.currentTrackStore.id) {
@@ -104,7 +106,8 @@ document.addEventListener('alpine:init', () => {
                             // Dispatch the event with the track URL
                             this.$dispatch('track-returned', {
                                 id: songId,
-                                url: _track.url
+                                url: _track.url,
+                                triggeredFromTheQueue: triggeredFromTheQueue
                             });
 
                             // Set the loading state to false

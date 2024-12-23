@@ -36,10 +36,6 @@ document.addEventListener('alpine:init', () => {
             })
         },
 
-        async setCurrentPlayingTrack() {
-
-        },
-
         async initListeners() {
             /**
              * Event listener for when the audio element is ready to play and metadata is available.
@@ -61,11 +57,6 @@ document.addEventListener('alpine:init', () => {
 
                 // Update the duration display.
                 this.elmStore.duration.textContent = this.formatTime(duration)
-
-                // If the track is not playing, start playing it.
-                if (this.currentTrackStore.isPlaying || this.elmStore.audio.currentTime <= 0) {
-                    await this.$store.currentTrack.play()
-                }
             })
 
             /**
@@ -86,7 +77,7 @@ document.addEventListener('alpine:init', () => {
                         return
                     }
 
-                    await this.resetPlayer()
+                    await this.$store.queue.playNext()
                 }
             })
 
@@ -118,7 +109,7 @@ document.addEventListener('alpine:init', () => {
              * Event listener for the custom event dispatched when the streaming url of a track has been returned form the API.
              */
             window.addEventListener('track-returned', (e) => {
-                this.$store.currentTrack.loadDetails(e.detail.id, e.detail.url)
+                this.$store.currentTrack.loadDetails(e.detail.id, e.detail.url, e.detail.triggeredFromTheQueue)
             })
 
             window.addEventListener('restart-current-track', (e) => {
@@ -132,21 +123,32 @@ document.addEventListener('alpine:init', () => {
          * Toggle loop mode on the audio player.
          */
         async toggleLoop() {
-            this.$store.currentTrack.isLooping = !this.$store.currentTrack.isLooping
+            if (this.$store.queue.shouldRepeat == false) {
+                this.$store.queue.shouldRepeat = true
+            } else {
+                if (this.$store.currentTrack.isLooping == false) {
+                    this.$store.currentTrack.isLooping = true
+                    document.querySelector('#trackLoopButton').setAttribute('name', 'repeat-1')
+                } else {
+                    this.$store.currentTrack.isLooping = false
+                    this.$store.queue.shouldRepeat = false
+                    document.querySelector('#trackLoopButton').setAttribute('name', 'repeat')
+                }
+            }
         },
 
         // Shuffle the queue of tracks.
         async shuffleQueue() {
-            this.$store.queue.tracks = this.shuffle(this.$store.queue.tracks)
+            this.$store.queue.shuffleQueue()
         },
 
         // Show the queue of tracks.
         async showQueue() {
-            console.log(this.$store.queue.tracks)
+            this.$store.queue.isVisible = !this.$store.queue.isVisible
         },
 
         async resetPlayer() {
             this.$store.currentTrack.reset()
-        }
+        },
     }))
 })
