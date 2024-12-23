@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 maximum-scale=1, user-scalable=no">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/ios/192.png">
 
     <script>
         const basePath = window.location.pathname.includes('/tunora') ? '/tunora/' : '/';
@@ -51,14 +53,17 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
     <!-- My manifest -->
-     <link rel="manifest" href="assets/manifest.json">
+    <link rel="manifest" href="assets/manifest.json">
 
     <!-- If the current path name is not '/', redirect to '/'-->
     <script async type="module">
         if (window.location.pathname !== ENV.BASE_URL) {
-          window.location.href = ENV.BASE_URL;
+            window.location.href = ENV.BASE_URL;
         }
-      </script>
+    </script>
+
+    <!-- My favicon -->
+    <link rel="shortcut icon" href="assets/icons/ios/192.png" type="image/x-icon">
 
     <title>Tunora</title>
 </head>
