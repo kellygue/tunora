@@ -2,7 +2,7 @@
     "name": "Tunora - Music player",
     "lang": "en",
     "short_name": "Tunora",
-    "description": "KElly's personal music player",
+    "description": "Kelly's personal music player",
     "version": "0.1.0",
     "manifest_version": 1,
     "start_url": "/tunora",
@@ -37,5 +37,4 @@
             "purpose": "any maskable"
         }
     ]
-
 }  
