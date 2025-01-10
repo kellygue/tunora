@@ -10,31 +10,5 @@
     "display": "standalone",
     "background_color": "#4444ff",
     "theme_color": "#4433ff",
-    "orientation": "portrait",
-    "icons": [
-        {
-            "src": "/tunora/assets/icons/ios/192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/tunora/assets/icons/ios/128.png",
-            "sizes": "128x128",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/tunora/assets/icons/ios/512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/tunora/assets/icons/ios/1024.png",
-            "sizes": "1024x1024",
-            "type": "image/png",
-            "purpose": "any maskable"
-        }
-    ]
+    "orientation": "portrait"
 }  

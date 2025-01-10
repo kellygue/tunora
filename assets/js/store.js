@@ -34,6 +34,8 @@ document.addEventListener('alpine:init', () => {
         currentPage: 'home',
         discogsAccessToken: "YCdDUCsvhIlOSUaDsLKeHqsLYmnIPLuGNaxmsjoV",
         discogBaseEndpoint: "https://api.discogs.com/database",
+        lastFMEndpoint: "https://ws.audioscrobbler.com/2.0",
+        lastFMToken: "ca76464bee2f0af2e0aba42d145fc997",
         debugMode: true, // Set to false before deployment
         trackUrlExpiry: 2 * 60 * 60 * 1000, // Expire the URL after 2 hours
     })
