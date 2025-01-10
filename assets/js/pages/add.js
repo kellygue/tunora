@@ -27,29 +27,34 @@ export default () => ({
     },
 
     async search() {
-        let response = await fetch(`${this.$store.app.discogBaseEndpoint}/search?release_title=${encodeURI(this.track.title)}&artist=${encodeURI(this.track.artist)}&token=${this.$store.app.discogsAccessToken}`)
-        let data = await response.json()
+        // let response = await fetch(`https://api.allorigins.win/raw?url=${this.$store.app.lastFMEndpoint}/method=track.search&track=Good+News&api_key=${this.$store.app.lastFMToken}&format=json`)
 
-        console.log(this.coverChoices[0])
+        /* Create a LastFM object */
+        const lastfmInstance = new LastFM({
+            apiKey    : 'ca76464bee2f0af2e0aba42d145fc997',
+            apiSecret : '6be2fbcdb6bc4267a10c37d8287d7c3f',
+        })
 
-        this.coverChoices = []
+        /* Load some info. */
+        lastfmInstance.track.getInfo({
+            track: this.track.title || '',
+            artist: this.track.artist || '',
+            apiKey: 'ca76464bee2f0af2e0aba42d145fc997',
+        },
+        {
+            success: function(_result){
+                this.parent.coverChoices = []
+                this.parent.coverChoices.push(_result.track.album.image[2]['#text'])
+                this.parent.coverChoices.push(this.parent.defaultCover)
+                this.parent.chosenCover = this.parent.coverChoices[0]
+            },
+            
+            error: function(code, message){
+                console.log(code, message)
+            },
 
-        if (data.results.length > 0) {
-            // Loop through the first 5 results and add them to the coverChoices array
-            for (let i = 0; i < (data.results.length - 1); i++) {
-                if (this.coverChoices.length >= this.maxCoverChoices) {
-                    break
-                }
-
-                // Handle cover images
-                if (data.results[i] && data.results[i].cover_image && (data.results[i].cover_image.includes('.jpeg') || data.results[i].cover_image.includes('.jpg') || data.results[i].cover_image.includes('.png'))) {
-                    this.coverChoices.push(data.results[i].cover_image)
-                }
-            }
-        }
-
-        this.coverChoices.push(this.defaultCover)
-        this.chosenCover = this.coverChoices[0]
+            parent: this
+        })
     },
 
     async addTrack() {
